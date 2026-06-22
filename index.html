@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRENDTEES Studio — Seller Control Panel</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --void:#06060a;
+    --panel:#100f17;
+    --panel-2:#171622;
+    --panel-3:#1d1c2a;
+    --line: rgba(168,85,247,0.18);
+    --violet:#a855f7;
+    --magenta:#ec4dd8;
+    --cyan:#22d3ee;
+    --ice:#eef1ff;
+    --mist:#9090a6;
+    --danger:#ff5470;
+    --go:#34e0a1;
+    --grad-drip: linear-gradient(95deg, var(--violet) 0%, var(--magenta) 45%, var(--cyan) 100%);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(900px 500px at 15% -10%, rgba(168,85,247,0.16), transparent 60%),
+      radial-gradient(800px 600px at 110% 10%, rgba(34,211,238,0.12), transparent 55%),
+      var(--void);
+    color:var(--ice);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4,.display{font-family:'Rajdhani', sans-serif; font-weight:700; letter-spacing:0.02em; margin:0;}
+  a{color:inherit;}
+  button{font-family:inherit; cursor:pointer;}
+  input,select,textarea{font-family:inherit;}
+  button:disabled{cursor:not-allowed; opacity:0.55;}
+
+  ::-webkit-scrollbar{width:10px; height:10px;}
+  ::-webkit-scrollbar-track{background:var(--panel);}
+  ::-webkit-scrollbar-thumb{background:linear-gradient(var(--violet), var(--cyan)); border-radius:8px;}
+
+  a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+    outline:2px solid var(--cyan); outline-offset:2px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+
+  .drip-line{position:relative; height:3px; border-radius:3px; background:var(--grad-drip); background-size:200% 100%; animation:flow 6s linear infinite; overflow:visible;}
+  .drip-line::before,.drip-line::after{content:''; position:absolute; top:100%; width:2px; border-radius:0 0 3px 3px; background:linear-gradient(var(--cyan), transparent); animation:drip 3.2s ease-in infinite;}
+  .drip-line::before{left:18%; height:10px; animation-delay:.4s;}
+  .drip-line::after{left:64%; height:14px; background:linear-gradient(var(--magenta), transparent); animation-delay:1.6s;}
+  @keyframes flow{to{background-position:200% 0;}}
+  @keyframes drip{
+    0%{opacity:0; transform:scaleY(0.4) translateY(-4px);}
+    25%{opacity:1; transform:scaleY(1) translateY(0);}
+    75%{opacity:1;}
+    100%{opacity:0; transform:translateY(6px);}
+  }
+
+  .glow-text{background:var(--grad-drip); -webkit-background-clip:text; background-clip:text; color:transparent; filter:drop-shadow(0 0 14px rgba(168,85,247,0.45));}
+
+  /* ============== AUTH SCREEN ============== */
+  #authScreen{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:32px 20px;}
+  .auth-wrap{width:100%; max-width:440px; display:flex; flex-direction:column; align-items:center; animation:riseIn .7s ease both;}
+  @keyframes riseIn{from{opacity:0; transform:translateY(18px);} to{opacity:1; transform:translateY(0);}}
+
+  .login-logo-badge{
+    width:130px; height:130px; border-radius:50%; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.06), 0 0 40px 6px rgba(168,85,247,0.35), 0 0 70px 10px rgba(34,211,238,0.18);
+    margin-bottom:18px; background:var(--panel-2);
+    animation:badgePulse 4.5s ease-in-out infinite;
+  }
+  .login-logo-badge .badge-fallback{font-family:'Rajdhani', sans-serif; font-weight:700; font-size:34px; background:var(--grad-drip); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  @keyframes badgePulse{
+    0%,100%{box-shadow:0 0 0 1px rgba(255,255,255,0.06), 0 0 40px 6px rgba(168,85,247,0.35), 0 0 70px 10px rgba(34,211,238,0.18);}
+    50%{box-shadow:0 0 0 1px rgba(255,255,255,0.08), 0 0 54px 10px rgba(236,77,216,0.4), 0 0 90px 16px rgba(34,211,238,0.28);}
+  }
+  .login-tag{color:var(--mist); font-size:13px; letter-spacing:0.18em; text-transform:uppercase; margin-bottom:28px;}
+
+  /* Tab switcher */
+  .auth-tabs{display:flex; width:100%; margin-bottom:0; border-radius:var(--radius) var(--radius) 0 0; overflow:hidden; border:1px solid var(--line); border-bottom:none;}
+  .auth-tab{flex:1; padding:13px 10px; font-size:14px; font-weight:700; font-family:'Rajdhani',sans-serif; letter-spacing:0.06em; background:var(--panel); border:none; color:var(--mist); cursor:pointer; transition:background .2s, color .2s; text-transform:uppercase;}
+  .auth-tab.active{background:var(--panel-2); color:var(--ice);}
+  .auth-tab:first-child{border-right:1px solid var(--line);}
+
+  .auth-card{
+    width:100%;
+    background:linear-gradient(160deg, var(--panel-2), var(--panel));
+    border:1px solid var(--line);
+    border-top:none;
+    border-radius:0 0 var(--radius) var(--radius);
+    padding:28px 28px 24px;
+    position:relative;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.7);
+  }
+  .auth-card::before{
+    content:''; position:absolute; inset:-1px; border-radius:0 0 var(--radius) var(--radius);
+    padding:1px; background:var(--grad-drip); opacity:0.28;
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none;
+  }
+
+  /* Steps */
+  .auth-step{display:none;}
+  .auth-step.active{display:block;}
+
+  .step-indicator{display:flex; align-items:center; gap:8px; margin-bottom:20px;}
+  .step-dot{width:8px; height:8px; border-radius:50%; background:var(--panel-3); border:1px solid var(--line); transition:background .2s, box-shadow .2s; display:flex; align-items:center; justify-content:center; font-size:8px;}
+  .step-dot.active{background:var(--grad-drip); box-shadow:0 0 10px rgba(168,85,247,0.6);}
+  .step-dot.done{background:var(--go); border-color:var(--go); color:#08060d; font-size:7px; font-weight:900;}
+  .step-track{flex:1; height:1px; background:var(--line);}
+
+  .step-title{font-size:20px; margin-bottom:4px;}
+  .step-sub{color:var(--mist); font-size:13px; margin-bottom:20px;}
+
+  /* Fields */
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--mist); margin-bottom:7px; font-weight:600;}
+  .field .input-shell{position:relative; border-radius:var(--radius-sm); background:var(--void); border:1px solid rgba(255,255,255,0.08); transition:border-color .2s, box-shadow .2s;}
+  .field .input-shell:focus-within{border-color:var(--cyan); box-shadow:0 0 0 3px rgba(34,211,238,0.14), 0 0 18px rgba(168,85,247,0.25);}
+  .field input{width:100%; background:transparent; border:none; outline:none; color:var(--ice); font-size:15px; padding:13px 14px;}
+  .field input.otp-input{text-align:center; font-size:22px; letter-spacing:0.4em; font-weight:700; padding:13px 8px;}
+  .field input::placeholder{color:#54546b;}
+  .field-error{display:none; color:var(--danger); font-size:12px; margin-top:6px;}
+  .field.error .input-shell{border-color:var(--danger);}
+  .field.error .field-error{display:block;}
+
+  .phone-prefix{display:flex; align-items:center; gap:0;}
+  .phone-prefix .prefix-label{padding:13px 12px 13px 14px; color:var(--mist); font-size:15px; border-right:1px solid rgba(255,255,255,0.08); white-space:nowrap; flex-shrink:0;}
+  .phone-prefix input{border-left:none !important; padding-left:10px !important;}
+
+  .otp-meta{display:flex; justify-content:space-between; align-items:center; margin-top:10px; font-size:12.5px;}
+  .otp-resend{background:none; border:none; color:var(--cyan); font-weight:600; padding:0; font-size:12.5px;}
+  .otp-resend:disabled{color:var(--mist);}
+  .otp-timer{color:var(--mist);}
+
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; border:none; border-radius:var(--radius-sm); font-weight:600; font-size:14px; padding:12px 20px; transition:transform .15s, filter .2s, box-shadow .2s;}
+  .btn:active{transform:translateY(1px) scale(0.99);}
+  .btn-primary{width:100%; color:#08060d; background:var(--grad-drip); background-size:160% 100%; box-shadow:0 10px 30px -8px rgba(168,85,247,0.55); padding:14px 20px; font-size:15px;}
+  .btn-primary:hover{filter:brightness(1.08); box-shadow:0 12px 36px -6px rgba(236,77,216,0.6);}
+  .btn-secondary-line{width:100%; background:transparent; color:var(--mist); border:1px solid var(--line); margin-top:10px; font-size:13px; padding:11px 16px;}
+  .btn-secondary-line:hover{color:var(--ice); border-color:var(--cyan);}
+
+  .auth-status{min-height:18px; font-size:12.5px; margin-top:12px; text-align:center; color:var(--danger);}
+  .auth-status.ok{color:var(--go);}
+
+  .info-box{margin-top:14px; padding:10px 12px; border-radius:var(--radius-sm); background:rgba(34,211,238,0.06); border:1px solid rgba(34,211,238,0.18); color:var(--mist); font-size:11.5px; line-height:1.6;}
+  .info-box b{color:var(--ice);}
+
+  .pw-strength{height:4px; border-radius:2px; margin-top:8px; background:var(--panel-3); overflow:hidden;}
+  .pw-strength-bar{height:100%; border-radius:2px; width:0; transition:width .3s, background .3s;}
+
+  .login-foot{margin-top:14px; text-align:center; color:#54546b; font-size:12px;}
+
+  /* ============== DASHBOARD ============== */
+  #dashboard{display:none; min-height:100vh; flex-direction:column;}
+  #dashboard.active{display:flex;}
+
+  .topbar{height:72px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; background:linear-gradient(180deg, var(--panel-2), var(--panel)); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:50;}
+  .topbar-left{display:flex; align-items:center; gap:14px;}
+  .topbar-logo{width:46px; height:46px; border-radius:50%; overflow:hidden; box-shadow:0 0 0 1px rgba(255,255,255,0.08), 0 0 18px rgba(168,85,247,0.4); flex:0 0 auto; display:flex; align-items:center; justify-content:center; background:var(--panel-3);}
+  .topbar-logo img{width:100%; height:100%; object-fit:cover; display:block;}
+  .topbar-logo .badge-fallback-sm{font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; background:var(--grad-drip); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .topbar-brand{display:flex; flex-direction:column; line-height:1.05;}
+  .topbar-brand .name{font-size:19px; font-weight:700; letter-spacing:0.03em;}
+  .topbar-brand .role{font-size:11px; color:var(--mist); letter-spacing:0.12em; text-transform:uppercase; margin-top:2px;}
+
+  .topbar-right{display:flex; align-items:center; gap:16px;}
+  .user-chip{display:flex; align-items:center; gap:10px; background:var(--panel-3); border:1px solid var(--line); border-radius:30px; padding:6px 14px 6px 6px; cursor:pointer; transition:border-color .2s;}
+  .user-chip:hover{border-color:var(--cyan);}
+  .user-avatar{width:30px; height:30px; border-radius:50%; background:var(--grad-drip); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#08060d; overflow:hidden; flex:0 0 auto;}
+  .user-avatar img{width:100%; height:100%; object-fit:cover; display:block;}
+  .user-chip .uid{font-size:13px; font-weight:600;}
+  .user-chip .uid small{display:block; font-size:10px; color:var(--mist); font-weight:400; letter-spacing:0.06em;}
+  #avatarUploadInput{display:none;}
+
+  .btn-ghost{background:transparent; border:1px solid var(--line); color:var(--mist); font-size:13px; padding:9px 16px;}
+  .btn-ghost:hover{color:var(--ice); border-color:var(--cyan);}
+
+  .layout{flex:1 1 auto; display:grid; grid-template-columns:230px 1fr; min-height:0;}
+  .sidenav{background:var(--panel); border-right:1px solid var(--line); padding:20px 14px; display:flex; flex-direction:column; gap:6px;}
+  .nav-eyebrow{font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:#54546b; padding:6px 12px 10px;}
+  .nav-item{display:flex; align-items:center; gap:11px; padding:11px 13px; border-radius:10px; color:var(--mist); font-size:14px; font-weight:600; border:1px solid transparent; background:transparent; text-align:left; width:100%; transition:background .2s, color .2s; position:relative;}
+  .nav-item .ic{font-size:16px; width:20px; text-align:center; flex:0 0 auto;}
+  .nav-item:hover{color:var(--ice); background:var(--panel-2);}
+  .nav-item.active{color:var(--ice); background:var(--panel-2); border-color:var(--line);}
+  .nav-item.active::before{content:''; position:absolute; left:-14px; top:8px; bottom:8px; width:3px; border-radius:3px; background:var(--grad-drip);}
+  .nav-item.active::after{content:''; position:absolute; left:-14px; bottom:5px; width:2px; height:7px; background:var(--cyan); border-radius:0 0 2px 2px; animation:drip 2.6s ease-in infinite;}
+  .nav-divider{height:1px; background:var(--line); margin:10px 4px;}
+  .nav-foot{margin-top:auto; padding:10px 12px; font-size:11px; color:#44445a; line-height:1.5;}
+
+  .content{padding:28px 32px 60px; overflow-y:auto; min-width:0;}
+  .panel{display:none; animation:fadeUp .35s ease both;}
+  .panel.active{display:block;}
+  @keyframes fadeUp{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);}}
+
+  .panel-head{margin-bottom:22px;}
+  .panel-head h1{font-size:26px; margin-bottom:6px;}
+  .panel-head p{color:var(--mist); font-size:13.5px; margin:0;}
+
+  .card{background:linear-gradient(160deg, var(--panel-2), var(--panel)); border:1px solid var(--line); border-radius:var(--radius); padding:24px; margin-bottom:26px;}
+  .card h3{font-size:16px; margin-bottom:4px;}
+  .card .card-sub{color:var(--mist); font-size:12.5px; margin-bottom:18px;}
+
+  .profile-row{display:flex; align-items:center; gap:20px; flex-wrap:wrap;}
+  .profile-photo-shell{width:88px; height:88px; border-radius:50%; background:var(--panel-3); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; overflow:hidden; flex:0 0 auto; position:relative;}
+  .profile-photo-shell img{width:100%; height:100%; object-fit:cover; display:block;}
+  .profile-photo-shell .badge-fallback-lg{font-family:'Rajdhani',sans-serif; font-weight:700; font-size:30px; background:var(--grad-drip); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .profile-meta{display:flex; flex-direction:column; gap:4px;}
+  .profile-meta .pname{font-size:16px; font-weight:700;}
+  .profile-meta .pmobile{font-size:12.5px; color:var(--mist);}
+
+  .form-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:18px 20px;}
+  .form-grid .full{grid-column:1 / -1;}
+  .form-grid .field{margin-bottom:0;}
+  .form-grid textarea{width:100%; background:var(--void); border:1px solid rgba(255,255,255,0.08); border-radius:var(--radius-sm); color:var(--ice); font-size:14.5px; padding:12px 14px; resize:vertical; min-height:80px; transition:border-color .2s, box-shadow .2s;}
+  .form-grid textarea:focus{outline:none; border-color:var(--cyan); box-shadow:0 0 0 3px rgba(34,211,238,0.14);}
+
+  .upload-box{border:1.5px dashed rgba(168,85,247,0.4); border-radius:var(--radius-sm); background:rgba(168,85,247,0.04); padding:22px; text-align:center; cursor:pointer; transition:border-color .2s, background .2s; position:relative;}
+  .upload-box:hover{border-color:var(--cyan); background:rgba(34,211,238,0.05);}
+  .upload-box input[type="file"]{position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;}
+  .upload-box .up-icon{font-size:26px; margin-bottom:8px;}
+  .upload-box .up-text{font-size:13.5px; color:var(--ice); font-weight:600;}
+  .upload-box .up-sub{font-size:11.5px; color:var(--mist); margin-top:3px;}
+  .upload-preview{margin-top:12px; display:none; align-items:center; gap:10px; font-size:12.5px; color:var(--go);}
+  .upload-preview img{width:38px; height:38px; border-radius:8px; object-fit:cover;}
+
+  .form-actions{margin-top:22px; display:flex; justify-content:flex-end; gap:12px;}
+  .btn-accent{color:#08060d; background:var(--grad-drip); background-size:160% 100%; box-shadow:0 8px 22px -6px rgba(168,85,247,0.5);}
+  .btn-accent:hover{filter:brightness(1.08);}
+
+  .table-wrap{overflow-x:auto; border-radius:var(--radius-sm); border:1px solid var(--line);}
+  table{width:100%; border-collapse:collapse; min-width:760px;}
+  thead th{text-align:left; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--mist); padding:13px 16px; background:var(--panel-3); border-bottom:1px solid var(--line); white-space:nowrap;}
+  tbody td{padding:13px 16px; font-size:13.5px; border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr{transition:background .15s;}
+  tbody tr:hover{background:rgba(255,255,255,0.02);}
+
+  .prod-cell{display:flex; align-items:center; gap:10px;}
+  .prod-thumb{width:38px; height:38px; border-radius:8px; object-fit:cover; flex:0 0 auto; background:var(--void); border:1px solid var(--line);}
+  .prod-thumb.placeholder{display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--mist);}
+  .prod-name{font-weight:600; color:var(--ice);}
+  .prod-id{font-size:11px; color:#54546b;}
+
+  .qty-control{display:inline-flex; align-items:center; gap:8px;}
+  .qty-btn{width:26px; height:26px; border-radius:7px; border:1px solid var(--line); background:var(--panel-3); color:var(--ice); font-size:14px; line-height:1; display:flex; align-items:center; justify-content:center; transition:background .15s, border-color .15s, transform .1s;}
+  .qty-btn:hover{border-color:var(--cyan); background:var(--panel);}
+  .qty-btn:active{transform:scale(0.92);}
+  .qty-btn.minus:hover{border-color:var(--danger);}
+  .qty-val{min-width:30px; text-align:center; font-weight:700; font-size:14px;}
+
+  .badge{display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; letter-spacing:0.04em; padding:5px 10px; border-radius:20px;}
+  .badge::before{content:''; width:6px; height:6px; border-radius:50%;}
+  .badge.high{color:var(--go); background:rgba(52,224,161,0.12);}
+  .badge.high::before{background:var(--go);}
+  .badge.low{color:#ffb340; background:rgba(255,179,64,0.12);}
+  .badge.low::before{background:#ffb340;}
+  .badge.out{color:var(--danger); background:rgba(255,84,112,0.12);}
+  .badge.out::before{background:var(--danger);}
+  .badge.shipped{color:var(--cyan); background:rgba(34,211,238,0.12);}
+  .badge.shipped::before{background:var(--cyan);}
+  .badge.pending{color:var(--magenta); background:rgba(236,77,216,0.12);}
+  .badge.pending::before{background:var(--magenta);}
+
+  .btn-sm{padding:7px 14px; font-size:12.5px; border-radius:7px;}
+  .btn-ship{color:#08060d; background:linear-gradient(95deg, var(--cyan), var(--go)); font-weight:700;}
+  .btn-ship:hover{filter:brightness(1.1);}
+  .btn-ship[disabled]{opacity:0.4; cursor:not-allowed; filter:none; background:var(--panel-3); color:var(--mist);}
+
+  .empty-row td{text-align:center; color:#54546b; padding:34px 16px; font-size:13px;}
+
+  .stat-row{display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:26px;}
+  .stat-card{background:var(--panel-2); border:1px solid var(--line); border-radius:var(--radius-sm); padding:18px 18px 16px;}
+  .stat-card .stat-label{font-size:11.5px; color:var(--mist); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;}
+  .stat-card .stat-val{font-size:26px; font-weight:700; font-family:'Rajdhani',sans-serif;}
+  .stat-card .stat-val.grad{background:var(--grad-drip); -webkit-background-clip:text; background-clip:text; color:transparent;}
+
+  .toast-wrap{position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:10px; z-index:999;}
+  .toast{background:var(--panel-2); border:1px solid var(--line); border-left:3px solid var(--go); border-radius:10px; padding:13px 18px; font-size:13px; box-shadow:0 14px 30px -10px rgba(0,0,0,0.6); animation:toastIn .25s ease both; max-width:320px;}
+  .toast.err{border-left-color:var(--danger);}
+  .toast.info{border-left-color:var(--violet);}
+  @keyframes toastIn{from{opacity:0; transform:translateX(20px);} to{opacity:1; transform:translateX(0);}}
+
+  select.field-select{width:100%; background:var(--void); border:1px solid rgba(255,255,255,0.08); border-radius:var(--radius-sm); color:var(--ice); font-size:14.5px; padding:13px 14px; appearance:none; -webkit-appearance:none; background-image:linear-gradient(45deg, transparent 50%, var(--mist) 50%), linear-gradient(135deg, var(--mist) 50%, transparent 50%); background-position:calc(100% - 18px) calc(1em + 4px), calc(100% - 13px) calc(1em + 4px); background-size:5px 5px, 5px 5px; background-repeat:no-repeat;}
+  select.field-select:focus{outline:none; border-color:var(--cyan);}
+
+  .otp-spinner{display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,0.2); border-top-color:var(--cyan); border-radius:50%; animation:spin .7s linear infinite; margin-right:6px; vertical-align:middle;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  @media (max-width: 900px){
+    .layout{grid-template-columns:78px 1fr;}
+    .sidenav{padding:18px 8px; align-items:center;}
+    .nav-item span.label{display:none;}
+    .nav-eyebrow{display:none;}
+    .nav-item{justify-content:center; padding:12px;}
+    .nav-item.active::before{left:-8px;}
+    .nav-item.active::after{left:-8px;}
+    .form-grid{grid-template-columns:1fr;}
+    .stat-row{grid-template-columns:repeat(2, 1fr);}
+    .topbar-brand .name{font-size:16px;}
+    .content{padding:20px 16px 50px;}
+  }
+  @media (max-width: 560px){
+    .stat-row{grid-template-columns:1fr 1fr;}
+    .user-chip .uid{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============== AUTH SCREEN ============== -->
+<div id="authScreen">
+  <div class="auth-wrap">
+    <div class="login-logo-badge" id="loginLogoBadge">
+      <span class="badge-fallback">TT</span>
+    </div>
+    <div class="login-tag">Seller Control Panel</div>
+
+    <!-- TAB SWITCHER -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Sign in</button>
+      <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">Create account</button>
+    </div>
+
+    <div class="auth-card">
+
+      <!-- ===== LOGIN FLOW ===== -->
+      <div id="loginFlow">
+
+        <!-- LOGIN STEP 1: mobile + password -->
+        <div class="auth-step active" id="loginStep1">
+          <div class="step-indicator">
+            <div class="step-dot active" id="lDot1"></div>
+            <div class="step-track"></div>
+            <div class="step-dot" id="lDot2"></div>
+          </div>
+          <h2 class="step-title">Welcome back</h2>
+          <p class="step-sub">Enter your registered mobile number and password.</p>
+
+          <div class="field" id="l_fieldMobile">
+            <label for="l_mobile">Mobile number</label>
+            <div class="input-shell phone-prefix">
+              <span class="prefix-label">+91</span>
+              <input type="tel" id="l_mobile" placeholder="10-digit number" maxlength="10" inputmode="numeric">
+            </div>
+            <div class="field-error">Enter a valid 10-digit Indian mobile number.</div>
+          </div>
+
+          <div class="field" id="l_fieldPassword">
+            <label for="l_password">Password</label>
+            <div class="input-shell">
+              <input type="password" id="l_password" placeholder="••••••••" autocomplete="current-password">
+            </div>
+            <div class="field-error">Incorrect mobile number or password.</div>
+          </div>
+
+          <button class="btn btn-primary" id="loginSendOtpBtn" onclick="loginStep1Submit()">Send OTP</button>
+          <div class="auth-status" id="loginStatus1"></div>
+          <div class="login-foot">TRENDTEES STUDIO · Local seller access only</div>
+        </div>
+
+        <!-- LOGIN STEP 2: OTP -->
+        <div class="auth-step" id="loginStep2">
+          <div class="step-indicator">
+            <div class="step-dot done" id="lDot1b">✓</div>
+            <div class="step-track"></div>
+            <div class="step-dot active" id="lDot2b"></div>
+          </div>
+          <h2 class="step-title">Verify OTP</h2>
+          <p class="step-sub">We've sent a 6-digit code to <span id="loginOtpDisplay" style="color:var(--ice);font-weight:600;"></span>.</p>
+
+          <div class="field" id="l_fieldOtp">
+            <label for="l_otp">One-time password</label>
+            <div class="input-shell">
+              <input type="text" id="l_otp" class="otp-input" inputmode="numeric" placeholder="······" maxlength="6" autocomplete="one-time-code">
+            </div>
+            <div class="field-error">That code didn't match. Please try again.</div>
+            <div class="otp-meta">
+              <button class="otp-resend" id="l_resendBtn" disabled onclick="loginResendOtp()">Resend OTP</button>
+              <span class="otp-timer" id="l_otpTimer">Resend in 30s</span>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="loginVerifyBtn" onclick="loginVerifyOtp()">Verify &amp; sign in</button>
+          <button class="btn btn-secondary-line" onclick="loginBackToStep1()">← Back</button>
+          <div class="auth-status" id="loginStatus2"></div>
+          <div class="info-box">The OTP is shown in a notification (simulated SMS — no real gateway in this demo).</div>
+        </div>
+
+      </div>
+
+      <!-- ===== SIGNUP FLOW ===== -->
+      <div id="signupFlow" style="display:none;">
+
+        <!-- SIGNUP STEP 1: name + mobile + password -->
+        <div class="auth-step active" id="signupStep1">
+          <div class="step-indicator">
+            <div class="step-dot active" id="sDot1"></div>
+            <div class="step-track"></div>
+            <div class="step-dot" id="sDot2"></div>
+            <div class="step-track"></div>
+            <div class="step-dot" id="sDot3"></div>
+          </div>
+          <h2 class="step-title">Create your account</h2>
+          <p class="step-sub">Fill in your details to register as a TRENDTEES seller.</p>
+
+          <div class="field" id="s_fieldName">
+            <label for="s_name">Full name / Store name</label>
+            <div class="input-shell">
+              <input type="text" id="s_name" placeholder="e.g. Riya Sharma" autocomplete="name">
+            </div>
+            <div class="field-error">Name is required.</div>
+          </div>
+
+          <div class="field" id="s_fieldMobile">
+            <label for="s_mobile">Mobile number</label>
+            <div class="input-shell phone-prefix">
+              <span class="prefix-label">+91</span>
+              <input type="tel" id="s_mobile" placeholder="10-digit number" maxlength="10" inputmode="numeric">
+            </div>
+            <div class="field-error">Enter a valid 10-digit Indian mobile number.</div>
+          </div>
+
+          <div class="field" id="s_fieldPassword">
+            <label for="s_password">Create password</label>
+            <div class="input-shell">
+              <input type="password" id="s_password" placeholder="Min 8 characters" autocomplete="new-password" oninput="checkPwStrength(this.value)">
+            </div>
+            <div class="pw-strength"><div class="pw-strength-bar" id="pwBar"></div></div>
+            <div class="field-error">Password must be at least 8 characters.</div>
+          </div>
+
+          <div class="field" id="s_fieldConfirm">
+            <label for="s_confirm">Confirm password</label>
+            <div class="input-shell">
+              <input type="password" id="s_confirm" placeholder="Re-enter password" autocomplete="new-password">
+            </div>
+            <div class="field-error">Passwords don't match.</div>
+          </div>
+
+          <button class="btn btn-primary" onclick="signupStep1Submit()">Send OTP to verify</button>
+          <div class="auth-status" id="signupStatus1"></div>
+        </div>
+
+        <!-- SIGNUP STEP 2: OTP verify -->
+        <div class="auth-step" id="signupStep2">
+          <div class="step-indicator">
+            <div class="step-dot done" id="sDot1b">✓</div>
+            <div class="step-track"></div>
+            <div class="step-dot active" id="sDot2b"></div>
+            <div class="step-track"></div>
+            <div class="step-dot" id="sDot3b"></div>
+          </div>
+          <h2 class="step-title">Verify your number</h2>
+          <p class="step-sub">We've sent a 6-digit code to <span id="signupOtpDisplay" style="color:var(--ice);font-weight:600;"></span>.</p>
+
+          <div class="field" id="s_fieldOtp">
+            <label for="s_otp">One-time password</label>
+            <div class="input-shell">
+              <input type="text" id="s_otp" class="otp-input" inputmode="numeric" placeholder="······" maxlength="6" autocomplete="one-time-code">
+            </div>
+            <div class="field-error">That code didn't match. Please try again.</div>
+            <div class="otp-meta">
+              <button class="otp-resend" id="s_resendBtn" disabled onclick="signupResendOtp()">Resend OTP</button>
+              <span class="otp-timer" id="s_otpTimer">Resend in 30s</span>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" onclick="signupVerifyOtp()">Verify number</button>
+          <button class="btn btn-secondary-line" onclick="signupBackToStep1()">← Back</button>
+          <div class="auth-status" id="signupStatus2"></div>
+          <div class="info-box">The OTP is shown in a notification (simulated SMS — no real gateway in this demo).</div>
+        </div>
+
+        <!-- SIGNUP STEP 3: success / complete -->
+        <div class="auth-step" id="signupStep3">
+          <div class="step-indicator">
+            <div class="step-dot done" id="sDot1c">✓</div>
+            <div class="step-track"></div>
+            <div class="step-dot done" id="sDot2c">✓</div>
+            <div class="step-track"></div>
+            <div class="step-dot active" id="sDot3c"></div>
+          </div>
+          <h2 class="step-title" style="background:var(--grad-drip);-webkit-background-clip:text;background-clip:text;color:transparent;">You're in!</h2>
+          <p class="step-sub">Your seller account has been created successfully.</p>
+
+          <div style="background:rgba(52,224,161,0.07); border:1px solid rgba(52,224,161,0.2); border-radius:var(--radius-sm); padding:16px 18px; margin-bottom:18px; font-size:13.5px; line-height:1.7; color:var(--mist);">
+            Account created for <span id="signupDoneDisplay" style="color:var(--ice);font-weight:600;"></span>.<br>
+            You can sign in using your mobile number and the password you set.
+          </div>
+
+          <button class="btn btn-primary" onclick="goToDashboard()">Go to dashboard →</button>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="login-foot" style="margin-top:14px;">TRENDTEES STUDIO · Dehradun, Uttarakhand</div>
+  </div>
+</div>
+
+<!-- ============== DASHBOARD ============== -->
+<div id="dashboard">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo" id="topbarLogo"><span class="badge-fallback-sm">TT</span></div>
+      <div class="topbar-brand">
+        <span class="name">TRENDTEES <span class="glow-text">STUDIO</span></span>
+        <span class="role">Seller Control Panel</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="user-chip" id="userChip" title="Click to update profile photo">
+        <div class="user-avatar" id="userAvatar">T</div>
+        <div class="uid" id="userIdDisplay">—<small>Logged in</small></div>
+      </div>
+      <input type="file" id="avatarUploadInput" accept="image/*">
+      <button class="btn btn-ghost" id="logoutBtn">Log out</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidenav">
+      <div class="nav-eyebrow">Menu</div>
+      <button class="nav-item active" data-panel="panel-overview"><span class="ic">◆</span><span class="label">Overview</span></button>
+      <button class="nav-item" data-panel="panel-account"><span class="ic">●</span><span class="label">My account</span></button>
+      <button class="nav-item" data-panel="panel-inventory"><span class="ic">▣</span><span class="label">Inventory</span></button>
+      <button class="nav-item" data-panel="panel-orders"><span class="ic">▤</span><span class="label">Orders</span></button>
+      <div class="nav-divider"></div>
+      <div class="nav-foot">TRENDTEES Studio<br>Dehradun, Uttarakhand</div>
+    </nav>
+
+    <main class="content">
+
+      <!-- OVERVIEW -->
+      <section class="panel active" id="panel-overview">
+        <div class="panel-head">
+          <h1>Overview</h1>
+          <p>A quick read on stock and order activity.</p>
+        </div>
+        <div class="stat-row">
+          <div class="stat-card"><div class="stat-label">Products listed</div><div class="stat-val grad" id="statProducts">0</div></div>
+          <div class="stat-card"><div class="stat-label">Units in stock</div><div class="stat-val" id="statUnits">0</div></div>
+          <div class="stat-card"><div class="stat-label">Orders received</div><div class="stat-val" id="statOrders">0</div></div>
+          <div class="stat-card"><div class="stat-label">Pending shipment</div><div class="stat-val" id="statPending">0</div></div>
+        </div>
+        <div class="card">
+          <h3>Welcome to TRENDTEES Studio</h3>
+          <p class="card-sub">Your store is live and ready. Head to Inventory to list your first product — orders will appear here as customers place them.</p>
+        </div>
+      </section>
+
+      <!-- ACCOUNT -->
+      <section class="panel" id="panel-account">
+        <div class="panel-head">
+          <h1>My account</h1>
+          <p>Manage how you appear across the seller panel.</p>
+        </div>
+        <div class="card">
+          <h3>Profile photo</h3>
+          <p class="card-sub">This photo appears in the header and login badge. PNG or JPG, square images look best.</p>
+          <div class="profile-row">
+            <div class="profile-photo-shell" id="profilePhotoShell"><span class="badge-fallback-lg" id="profilePhotoFallback">T</span></div>
+            <div class="profile-meta">
+              <span class="pname" id="profileNameDisplay">—</span>
+              <span class="pmobile" id="profileMobileDisplay">—</span>
+            </div>
+            <div style="margin-left:auto; display:flex; gap:10px; flex-wrap:wrap;">
+              <button type="button" class="btn btn-accent btn-sm" id="changePhotoBtn">Upload photo</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="removePhotoBtn">Remove photo</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- INVENTORY -->
+      <section class="panel" id="panel-inventory">
+        <div class="panel-head">
+          <h1>Inventory management</h1>
+          <p>List new apparel and keep stock levels current.</p>
+        </div>
+        <div class="card">
+          <h3>Upload new apparel</h3>
+          <p class="card-sub">Add name, description, price and stock to list a new product.</p>
+          <form id="productForm">
+            <div class="form-grid">
+              <div class="field">
+                <label for="pName">Product name</label>
+                <div class="input-shell"><input type="text" id="pName" placeholder="e.g. Oversized Drip Hoodie"></div>
+              </div>
+              <div class="field">
+                <label for="pPrice">Price (₹)</label>
+                <div class="input-shell"><input type="number" id="pPrice" min="0" step="1" placeholder="e.g. 1299"></div>
+              </div>
+              <div class="field full">
+                <label for="pDesc">Description</label>
+                <textarea id="pDesc" placeholder="e.g. Hand-finished streetwear piece, designed and printed in our Dehradun studio."></textarea>
+              </div>
+              <div class="field">
+                <label for="pStock">Total stock</label>
+                <div class="input-shell"><input type="number" id="pStock" min="0" step="1" placeholder="e.g. 50"></div>
+              </div>
+              <div class="field">
+                <label>Upload image</label>
+                <div class="upload-box" id="uploadBox">
+                  <input type="file" id="pImage" accept="image/*">
+                  <div class="up-icon">⇪</div>
+                  <div class="up-text">Click or drop an image</div>
+                  <div class="up-sub">PNG or JPG, product photo on a clean background</div>
+                </div>
+                <div class="upload-preview" id="uploadPreview">
+                  <img id="uploadPreviewImg" src="" alt="">
+                  <span id="uploadPreviewName"></span>
+                </div>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="reset" class="btn btn-ghost">Clear</button>
+              <button type="submit" class="btn btn-accent">Add to inventory</button>
+            </div>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Current inventory</h3>
+          <p class="card-sub">Adjust stock with the + / − controls. Changes reflect immediately across Orders.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Product</th><th>Description</th><th>Price</th><th>Stock</th><th>Manage</th><th>Status</th></tr>
+              </thead>
+              <tbody id="inventoryBody">
+                <tr class="empty-row"><td colspan="6">No products yet. Add your first item above.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ORDERS -->
+      <section class="panel" id="panel-orders">
+        <div class="panel-head">
+          <h1>Order fulfilment</h1>
+          <p>Review incoming orders, ship them, and keep inventory in sync.</p>
+        </div>
+        <div class="card">
+          <h3>Orders received</h3>
+          <p class="card-sub">Availability is calculated live as current inventory minus quantity ordered.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Order ID</th><th>Customer</th><th>Product</th><th>Qty</th><th>Availability</th><th>Status</th><th>Action</th></tr>
+              </thead>
+              <tbody id="ordersBody">
+                <tr class="empty-row"><td colspan="7">No orders yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ─────────────────────────────────────────────
+  // BACKEND RE-ROUTING INTEGRATION (Port 5001)
+  // ─────────────────────────────────────────────
+  const BACKEND_API = window.location.origin + "/api";
+
+  let products = [];
+  let orders = [];
+  let adminPhotoSrc = '';
+  let currentUser = null;
+
+  let loginPendingOtp = '';
+  let loginTimerHandle = null;
+  let loginMobile = '';
+
+  let signupPendingOtp = '';
+  let signupTimerHandle = null;
+  let staged = {};
+
+  /* ============================================================
+     HELPERS & SYNC ENGINE
+     ============================================================ */
+  function toast(msg, type){
+    const wrap = document.getElementById('toastWrap');
+    const el = document.createElement('div');
+    el.className = 'toast' + (type ? ' ' + type : '');
+    el.textContent = msg;
+    wrap.appendChild(el);
+    setTimeout(() => {
+      el.style.transition = 'opacity .3s, transform .3s';
+      el.style.opacity = '0';
+      el.style.transform = 'translateX(20px)';
+      setTimeout(() => el.remove(), 320);
+    }, 5000);
+  }
+
+  function esc(str){
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+  function truncate(str, n){ return str.length > n ? str.slice(0, n - 1) + '…' : str; }
+  function validMobile(v){ return /^[6-9]\d{9}$/.test(v.trim()); }
+  function generateOtp(){ return String(Math.floor(100000 + Math.random() * 900000)); }
+  function setFieldError(id, has){ document.getElementById(id).classList.toggle('error', has); }
+  function setStatus(id, msg, ok){
+    const el = document.getElementById(id); el.textContent = msg;
+    el.className = 'auth-status' + (ok ? ' ok' : '');
+  }
+  function maskMobile(m){ return '+91 ' + m.slice(0,2) + '••••' + m.slice(-4); }
+
+  function startTimer(timerEl, resendBtnEl, timerHandle, onExpire){
+    let secs = 30; resendBtnEl.disabled = true;
+    timerEl.textContent = 'Resend in ' + secs + 's';
+    if(timerHandle) clearInterval(timerHandle);
+    const h = setInterval(() => { secs--;
+      if(secs <= 0){ clearInterval(h); resendBtnEl.disabled = false; timerEl.textContent = "Didn't get it?"; } 
+      else { timerEl.textContent = 'Resend in ' + secs + 's'; }
+    }, 1000);
+    onExpire(h);
+  }
+
+  // Real-time Sync Engine with app.py database
+  async function syncWithBackend() {
+    try {
+      // 1. Fetch live clothes data
+      const prodRes = await fetch(`${BACKEND_API}/products`);
+      const rawProducts = await prodRes.json();
+      products = rawProducts.map(p => ({
+        id: String(p.id),
+        name: p.name,
+        desc: p.description || '',
+        price: parseFloat(p.price),
+        stock: parseInt(p.stock !== undefined ? p.stock : p.total_stock),
+        orders_count: p.orders_placed || 0,
+        imgSrc: p.img_src || p.img_url || ''
+      }));
+
+      // 2. Fetch live orders data
+      const ordRes = await fetch(`${BACKEND_API}/orders`);
+      const rawOrders = await ordRes.json();
+      orders = rawOrders.map(o => ({
+        id: String(o.id),
+        customer: o.customer_name + " (" + o.customer_mobile + ")",
+        productId: String(o.product_id),
+        qty: parseInt(o.qty),
+        status: o.status
+      }));
+
+      renderAll();
+    } catch (err) {
+      console.error("Backend offline:", err);
+    }
+  }
+
+  /* ============================================================
+     TAB SWITCH, FLOW FILTERS, STRENGTH
+     ============================================================ */
+  window.switchTab = function(tab){
+    document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+    document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
+    document.getElementById('loginFlow').style.display = tab === 'login' ? '' : 'none';
+    document.getElementById('signupFlow').style.display = tab === 'signup' ? '' : 'none';
+  };
+
+  ['l_mobile','s_mobile'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g,'').slice(0,10); });
+  });
+  ['l_otp','s_otp'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g,'').slice(0,6); });
+  });
+
+  window.checkPwStrength = function(pw){
+    const bar = document.getElementById('pwBar'); let score = 0;
+    if(pw.length >= 8) score++; if(/[A-Z]/.test(pw)) score++; if(/[0-9]/.test(pw)) score++; if(/[^A-Za-z0-9]/.test(pw)) score++;
+    const pct = (score / 4) * 100; const colors = ['#ff5470','#ffb340','#22d3ee','#34e0a1'];
+    bar.style.width = pct + '%'; bar.style.background = colors[score - 1] || 'transparent';
+  };
+
+  /* ============================================================
+     LOGIN & SIGNUP OVERRIDES (Simulated OTP with secure local setup)
+     ============================================================ */
+  window.loginStep1Submit = function(){
+    const mobile = document.getElementById('l_mobile').value.trim();
+    const password = document.getElementById('l_password').value;
+    if(!validMobile(mobile) || !password) { toast('Please fill details completely.', 'err'); return; }
+    
+    loginMobile = mobile; loginPendingOtp = generateOtp();
+    document.getElementById('loginOtpDisplay').textContent = maskMobile(mobile);
+    toast('📱 Seller Login OTP: ' + loginPendingOtp, 'info');
+    document.getElementById('loginStep1').classList.remove('active');
+    document.getElementById('loginStep2').classList.add('active');
+    startTimer(document.getElementById('l_otpTimer'), document.getElementById('l_resendBtn'), loginTimerHandle, h => { loginTimerHandle = h; });
+  };
+
+  window.loginVerifyOtp = function(){
+    if(document.getElementById('l_otp').value.trim() !== loginPendingOtp){ toast('Incorrect OTP.', 'err'); return; }
+    currentUser = { name: "TRENDTEES Owner", mobile: loginMobile };
+    enterDashboard();
+  };
+
+  window.signupStep1Submit = function(){
+    const name = document.getElementById('s_name').value.trim();
+    const mobile = document.getElementById('s_mobile').value.trim();
+    if(!name || !validMobile(mobile)) { toast('Verify your form inputs.', 'err'); return; }
+    staged = { name, mobile };
+    signupPendingOtp = generateOtp();
+    document.getElementById('signupOtpDisplay').textContent = maskMobile(mobile);
+    toast('📱 Seller Registration OTP: ' + signupPendingOtp, 'info');
+    document.getElementById('signupStep1').classList.remove('active');
+    document.getElementById('signupStep2').classList.add('active');
+  };
+
+  window.signupVerifyOtp = function(){
+    if(document.getElementById('s_otp').value.trim() !== signupPendingOtp){ toast('Invalid code.', 'err'); return; }
+    currentUser = { name: staged.name, mobile: staged.mobile };
+    document.getElementById('signupDoneDisplay').textContent = staged.name;
+    document.getElementById('signupStep2').classList.remove('active');
+    document.getElementById('signupStep3').classList.add('active');
+  };
+
+  window.goToDashboard = function(){ enterDashboard(); };
+  window.loginBackToStep1 = function(){ document.getElementById('loginStep2').classList.remove('active'); document.getElementById('loginStep1').classList.add('active'); };
+  window.signupBackToStep1 = function(){ document.getElementById('signupStep2').classList.remove('active'); document.getElementById('signupStep1').classList.add('active'); };
+
+  /* ============================================================
+     DASHBOARD CONTROLS & NAVIGATION
+     ============================================================ */
+  function enterDashboard(){
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('dashboard').classList.add('active');
+    document.getElementById('userIdDisplay').innerHTML = esc(currentUser.name) + '<small>Logged in</small>';
+    document.getElementById('profileNameDisplay').textContent = currentUser.name;
+    document.getElementById('profileMobileDisplay').textContent = '+91 ' + currentUser.mobile;
+    syncWithBackend();
+    setInterval(syncWithBackend, 4000); // Poll server status every 4s safely
+  }
+
+  document.getElementById('logoutBtn').addEventListener('click', function(){
+    location.reload();
+  });
+
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active'); document.getElementById(btn.dataset.panel).classList.add('active');
+    });
+  });
+
+  /* ============================================================
+     REAL LIVE INVENTORY UPLOAD (HITS FLASK API)
+     ============================================================ */
+  const pImage = document.getElementById('pImage');
+  const uploadPreview = document.getElementById('uploadPreview');
+  let pendingImageSrc = '';
+
+  pImage.addEventListener('change', function(){
+    const file = this.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      pendingImageSrc = ev.target.result;
+      document.getElementById('uploadPreviewImg').src = pendingImageSrc;
+      document.getElementById('uploadPreviewName').textContent = file.name;
+      uploadPreview.style.display = 'flex';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('productForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const name = document.getElementById('pName').value.trim();
+    const desc = document.getElementById('pDesc').value.trim();
+    const price = parseFloat(document.getElementById('pPrice').value);
+    const stock = parseInt(document.getElementById('pStock').value, 10);
+
+    if(!name || isNaN(price) || isNaN(stock)){ toast('Fields cannot be empty.', 'err'); return; }
+
+    // Direct asynchronous post payload to app.py
+    try {
+      const response = await fetch(`${BACKEND_API}/products`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: String(Date.now()).slice(-4), // Clean short ID generation
+          name: name,
+          price: price,
+          stock: stock,
+          desc: desc || "Dehradun Drop",
+          imgSrc: pendingImageSrc
+        })
+      });
+      if(response.ok) {
+        toast('🎉 Added to live database successfully!');
+        this.reset(); uploadPreview.style.display = 'none'; pendingImageSrc = '';
+        syncWithBackend();
+      } else {
+        toast('Server side validation failed.', 'err');
+      }
+    } catch(err) {
+      toast('Cannot connect to Python. Ensure port 5001 is active.', 'err');
+    }
+  });
+
+  function stockBadge(s){
+    if(s <= 0) return '<span class="badge out">Out of stock</span>';
+    if(s <= 5) return '<span class="badge low">Low stock</span>';
+    return '<span class="badge high">In stock</span>';
+  }
+
+  function renderInventory(){
+    const body = document.getElementById('inventoryBody');
+    if(!products.length){ body.innerHTML = '<tr class="empty-row"><td colspan="6">No products listed yet.</td></tr>'; return; }
+    body.innerHTML = products.map(p => {
+      const thumb = p.imgSrc ? `<img class="prod-thumb" src="${p.imgSrc}">` : '<div class="prod-thumb placeholder">▢</div>';
+      return `<tr>
+        <td><div class="prod-cell">${thumb}<div><div class="prod-name">${esc(p.name)}</div><div class="prod-id">ID: ${p.id}</div></div></div></td>
+        <td style="max-width:240px;color:var(--mist);">${esc(truncate(p.desc,70))}</td>
+        <td>₹${p.price}</td>
+        <td><span class="qty-val">${p.stock}</span></td>
+        <td><div class="qty-control"><button class="qty-btn minus" data-id="${p.id}" data-action="dec">−</button><button class="qty-btn plus" data-id="${p.id}" data-action="inc">+</button></div></td>
+        <td>${stockBadge(p.stock)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  document.getElementById('inventoryBody').addEventListener('click', async function(e){
+    const btn = e.target.closest('.qty-btn'); if(!btn) return;
+    const delta = btn.dataset.action === 'inc' ? 1 : -1;
+    try {
+      await fetch(`${BACKEND_API}/products/${btn.dataset.id}/stock`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ delta })
+      });
+      syncWithBackend();
+    } catch(err) { console.error(err); }
+  });
+
+  /* ============================================================
+     LIVE FULFILLMENT & STATS
+     ============================================================ */
+  function renderOrders(){
+    const body = document.getElementById('ordersBody');
+    if(!orders.length){ body.innerHTML = '<tr class="empty-row"><td colspan="7">No customer interactions logged.</td></tr>'; return; }
+    body.innerHTML = orders.map(o => {
+      const statusBadge = o.status === 'Shipped' ? '<span class="badge shipped">Shipped</span>' : '<span class="badge pending">Pending</span>';
+      const shipBtn = o.status === 'Shipped' 
+        ? '<button class="btn btn-sm btn-ship" disabled>Ready ✓</button>'
+        : `<button class="btn btn-sm btn-ship" data-id="${o.id}">Ship order</button>`;
+      return `<tr><td>#${o.id}</td><td>${esc(o.customer)}</td><td>Product ID: ${o.productId}</td><td>${o.qty}</td><td>Live Status</td><td>${statusBadge}</td><td>${shipBtn}</td></tr>`;
+    }).join('');
+  }
+
+  document.getElementById('ordersBody').addEventListener('click', async function(e){
+    const btn = e.target.closest('.btn-ship'); if(!btn || btn.disabled) return;
+    try {
+      const res = await fetch(`${BACKEND_API}/orders/${btn.dataset.id}/ship`, { method: "PATCH" });
+      if(res.ok) { toast('Order status marked as Shipped! 🚚'); syncWithBackend(); }
+    } catch(err) { console.error(err); }
+  });
+
+  function renderOverview(){
+    document.getElementById('statProducts').textContent = products.length;
+    document.getElementById('statUnits').textContent = products.reduce((s, p) => s + p.stock, 0);
+    document.getElementById('statOrders').textContent = orders.length;
+    document.getElementById('statPending').textContent = orders.filter(o => o.status !== 'Shipped').length;
+  }
+
+  function renderAll(){ renderInventory(); renderOrders(); renderOverview(); }
+})();
+</script>
+</body>
+</html>

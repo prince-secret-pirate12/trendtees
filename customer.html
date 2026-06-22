@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRENDTEES STUDIO — Shop</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --void:#06060a; --panel:#100f17; --panel-2:#171622; --panel-3:#1d1c2a;
+    --line:rgba(168,85,247,0.18); --violet:#a855f7; --magenta:#ec4dd8;
+    --cyan:#22d3ee; --ice:#eef1ff; --mist:#9090a6; --danger:#ff5470;
+    --go:#34e0a1; --amber:#ffb340;
+    --grad:linear-gradient(95deg,#a855f7 0%,#ec4dd8 45%,#22d3ee 100%);
+    --radius:14px; --radius-sm:8px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:radial-gradient(900px 500px at 15% -10%,rgba(168,85,247,.16),transparent 60%),radial-gradient(800px 600px at 110% 10%,rgba(34,211,238,.12),transparent 55%),var(--void); color:var(--ice); font-family:'Inter',sans-serif; min-height:100vh; -webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:'Rajdhani',sans-serif; font-weight:700; letter-spacing:.02em;}
+  button{font-family:inherit; cursor:pointer;}
+  input,textarea{font-family:inherit;}
+  button:disabled{cursor:not-allowed; opacity:.5;}
+  ::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-track{background:var(--panel);} ::-webkit-scrollbar-thumb{background:linear-gradient(var(--violet),var(--cyan)); border-radius:8px;}
+  @media(prefers-reduced-motion:reduce){*{animation-duration:.001ms!important; transition-duration:.001ms!important;}}
+
+  /* ── GLOW TEXT ── */
+  .glow{background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent; filter:drop-shadow(0 0 12px rgba(168,85,247,.45));}
+
+  /* ── DRIP LINE ── */
+  .drip-line{height:3px; border-radius:3px; background:var(--grad); background-size:200% 100%; animation:flow 6s linear infinite; position:relative; overflow:visible;}
+  .drip-line::before,.drip-line::after{content:''; position:absolute; top:100%; width:2px; border-radius:0 0 3px 3px; animation:drip 3.2s ease-in infinite;}
+  .drip-line::before{left:20%; height:10px; background:linear-gradient(var(--cyan),transparent); animation-delay:.4s;}
+  .drip-line::after{left:65%; height:14px; background:linear-gradient(var(--magenta),transparent); animation-delay:1.7s;}
+  @keyframes flow{to{background-position:200% 0;}}
+  @keyframes drip{0%{opacity:0;transform:scaleY(.4) translateY(-4px);}25%{opacity:1;transform:scaleY(1)translateY(0);}75%{opacity:1;}100%{opacity:0;transform:translateY(6px);}}
+
+  /* ════════════════════════════════
+     AUTH OVERLAY
+  ════════════════════════════════ */
+  #authOverlay{
+    position:fixed; inset:0; z-index:999;
+    background:rgba(6,6,10,.92);
+    backdrop-filter:blur(10px);
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+  }
+  .auth-box{
+    width:100%; max-width:400px;
+    background:linear-gradient(160deg,var(--panel-2),var(--panel));
+    border:1px solid var(--line); border-radius:var(--radius);
+    padding:32px 28px 28px;
+    position:relative; animation:rise .6s ease both;
+    box-shadow:0 40px 80px -20px rgba(0,0,0,.8);
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+  .auth-box::before{content:''; position:absolute; inset:-1px; border-radius:var(--radius); background:var(--grad); opacity:.25; -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none; padding:1px;}
+  .auth-logo{display:flex; align-items:center; gap:12px; margin-bottom:24px;}
+  .auth-logo-badge{width:52px; height:52px; border-radius:50%; background:var(--panel-3); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; box-shadow:0 0 24px rgba(168,85,247,.4);}
+  .auth-logo-badge span{font-family:'Rajdhani',sans-serif; font-weight:700; font-size:18px; background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .auth-logo h2{font-size:22px;}
+
+  /* auth tabs */
+  .auth-tabs{display:flex; margin-bottom:22px; border-bottom:1px solid var(--line);}
+  .auth-tab{flex:1; background:none; border:none; color:var(--mist); font-size:13.5px; font-weight:600; padding:10px 8px; letter-spacing:.05em; transition:color .2s; position:relative;}
+  .auth-tab.active{color:var(--ice);}
+  .auth-tab.active::after{content:''; position:absolute; bottom:-1px; left:0; right:0; height:2px; background:var(--grad); border-radius:2px;}
+
+  .auth-form{display:none;}
+  .auth-form.active{display:block;}
+
+  .field{margin-bottom:15px;}
+  .field label{display:block; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--mist); margin-bottom:6px; font-weight:600;}
+  .input-shell{border-radius:var(--radius-sm); background:var(--void); border:1px solid rgba(255,255,255,.08); transition:border-color .2s,box-shadow .2s;}
+  .input-shell:focus-within{border-color:var(--cyan); box-shadow:0 0 0 3px rgba(34,211,238,.14);}
+  .field input{width:100%; background:transparent; border:none; outline:none; color:var(--ice); font-size:15px; padding:12px 14px;}
+  .field input::placeholder{color:#54546b;}
+  .field .prefix-wrap{display:flex; align-items:center;}
+  .field .prefix{padding:12px 10px 12px 14px; color:var(--mist); border-right:1px solid rgba(255,255,255,.08); font-size:15px;}
+  .field-err{display:none; color:var(--danger); font-size:12px; margin-top:5px;}
+  .field.err .input-shell{border-color:var(--danger);}
+  .field.err .field-err{display:block;}
+
+  .btn-full{width:100%; border:none; border-radius:var(--radius-sm); font-weight:700; font-size:15px; padding:13px; color:#08060d; background:var(--grad); background-size:160% 100%; box-shadow:0 10px 28px -8px rgba(168,85,247,.55); transition:filter .2s,transform .15s;}
+  .btn-full:hover{filter:brightness(1.08);}
+  .btn-full:active{transform:translateY(1px);}
+  .auth-status{text-align:center; font-size:12.5px; margin-top:12px; min-height:18px; color:var(--danger);}
+  .auth-status.ok{color:var(--go);}
+
+  /* ════════════════════════════════
+     TOPBAR
+  ════════════════════════════════ */
+  .topbar{height:68px; display:flex; align-items:center; justify-content:space-between; padding:0 28px; background:linear-gradient(180deg,var(--panel-2),var(--panel)); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:50;}
+  .topbar-left{display:flex; align-items:center; gap:12px;}
+  .brand-badge{width:42px; height:42px; border-radius:50%; background:var(--panel-3); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; box-shadow:0 0 16px rgba(168,85,247,.35);}
+  .brand-badge span{font-family:'Rajdhani',sans-serif; font-weight:700; font-size:14px; background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .brand-name{font-size:18px; font-weight:700; font-family:'Rajdhani',sans-serif; letter-spacing:.03em;}
+  .topbar-right{display:flex; align-items:center; gap:14px;}
+  .user-greeting{font-size:13px; color:var(--mist);}
+  .user-greeting b{color:var(--ice);}
+  .cart-btn{background:var(--panel-3); border:1px solid var(--line); border-radius:24px; padding:8px 16px; font-size:13.5px; font-weight:600; color:var(--ice); display:flex; align-items:center; gap:8px; transition:border-color .2s;}
+  .cart-btn:hover{border-color:var(--cyan);}
+  .cart-count{background:var(--grad); color:#08060d; border-radius:50%; width:20px; height:20px; font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center;}
+
+  /* ════════════════════════════════
+     HERO BANNER
+  ════════════════════════════════ */
+  .hero{padding:56px 28px 48px; text-align:center; position:relative;}
+  .hero h1{font-size:clamp(36px,6vw,68px); line-height:1; margin-bottom:14px;}
+  .hero p{color:var(--mist); font-size:15px; max-width:460px; margin:0 auto 28px; line-height:1.6;}
+  .hero-chips{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+  .chip{background:rgba(168,85,247,.1); border:1px solid rgba(168,85,247,.25); border-radius:20px; padding:6px 14px; font-size:12px; font-weight:600; color:var(--violet);}
+
+  /* ════════════════════════════════
+     SHOP GRID
+  ════════════════════════════════ */
+  .shop-wrap{padding:0 28px 80px; max-width:1280px; margin:0 auto;}
+  .section-label{font-size:13px; letter-spacing:.1em; text-transform:uppercase; color:var(--mist); margin-bottom:20px; display:flex; align-items:center; gap:10px;}
+  .section-label::after{content:''; flex:1; height:1px; background:var(--line);}
+
+  .product-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:20px;}
+  .product-card{background:linear-gradient(160deg,var(--panel-2),var(--panel)); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; display:flex; flex-direction:column; transition:border-color .2s,transform .2s,box-shadow .2s;}
+  .product-card:hover{border-color:rgba(168,85,247,.45); transform:translateY(-3px); box-shadow:0 20px 50px -16px rgba(168,85,247,.3);}
+  .card-img{width:100%; aspect-ratio:1/1; object-fit:cover; background:var(--panel-3); display:block;}
+  .card-img-placeholder{width:100%; aspect-ratio:1/1; background:var(--panel-3); display:flex; align-items:center; justify-content:center; font-size:48px; color:var(--panel-2);}
+  .card-body{padding:16px 16px 14px; flex:1; display:flex; flex-direction:column; gap:8px;}
+  .card-name{font-size:16px; font-weight:700;}
+  .card-desc{font-size:12.5px; color:var(--mist); line-height:1.5; flex:1;}
+  .card-meta{display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;}
+  .card-price{font-size:20px; font-family:'Rajdhani',sans-serif; font-weight:700; background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .stock-badge{font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; white-space:nowrap;}
+  .stock-badge.high{color:var(--go); background:rgba(52,224,161,.12);}
+  .stock-badge.low{color:var(--amber); background:rgba(255,179,64,.12);}
+  .stock-badge.out{color:var(--danger); background:rgba(255,84,112,.12);}
+
+  /* stars */
+  .card-rating{display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--mist);}
+  .stars{color:var(--amber); font-size:13px; letter-spacing:1px;}
+
+  /* review toggle */
+  .review-toggle{background:none; border:none; color:var(--violet); font-size:12px; font-weight:600; padding:0; margin-top:2px; text-align:left;}
+  .review-toggle:hover{color:var(--cyan);}
+  .reviews-panel{display:none; margin-top:10px; border-top:1px solid var(--line); padding-top:12px;}
+  .reviews-panel.open{display:block;}
+  .review-item{margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,.04);}
+  .review-item:last-child{border-bottom:none; margin-bottom:0; padding-bottom:0;}
+  .review-header{display:flex; align-items:center; gap:8px; margin-bottom:4px;}
+  .review-name{font-size:12px; font-weight:600;}
+  .review-stars{font-size:12px; color:var(--amber);}
+  .review-text{font-size:12px; color:var(--mist); line-height:1.5;}
+
+  /* leave review form */
+  .leave-review{margin-top:12px; border-top:1px solid var(--line); padding-top:12px;}
+  .leave-review p{font-size:12px; color:var(--mist); margin-bottom:8px;}
+  .star-selector{display:flex; gap:5px; margin-bottom:8px;}
+  .star-btn{background:none; border:none; font-size:20px; color:var(--panel-3); cursor:pointer; transition:color .15s; padding:0; line-height:1;}
+  .star-btn.lit{color:var(--amber);}
+  .review-input{width:100%; background:var(--void); border:1px solid rgba(255,255,255,.08); border-radius:var(--radius-sm); color:var(--ice); font-size:13px; padding:9px 12px; resize:none; min-height:60px; outline:none; margin-bottom:8px;}
+  .review-input:focus{border-color:var(--cyan);}
+
+  /* buy button */
+  .btn-buy{margin-top:10px; width:100%; border:none; border-radius:var(--radius-sm); font-weight:700; font-size:14px; padding:12px; color:#08060d; background:linear-gradient(95deg,var(--violet),var(--cyan)); box-shadow:0 8px 22px -8px rgba(168,85,247,.5); transition:filter .2s,transform .15s;}
+  .btn-buy:hover{filter:brightness(1.1);}
+  .btn-buy:active{transform:scale(.98);}
+  .btn-buy:disabled{background:var(--panel-3); color:var(--mist); box-shadow:none; cursor:not-allowed; filter:none;}
+  .btn-review-submit{border:none; border-radius:7px; background:var(--panel-3); border:1px solid var(--line); color:var(--ice); font-size:12.5px; font-weight:600; padding:7px 14px; transition:border-color .2s;}
+  .btn-review-submit:hover{border-color:var(--cyan);}
+
+  /* empty state */
+  .empty-state{text-align:center; padding:80px 20px; color:var(--mist);}
+  .empty-state .big{font-size:48px; margin-bottom:14px;}
+  .empty-state p{font-size:14px; line-height:1.6; max-width:320px; margin:0 auto;}
+
+  /* loading */
+  .loading-grid{display:flex; justify-content:center; align-items:center; padding:80px 20px; color:var(--mist); font-size:14px; gap:10px;}
+  .spinner{width:20px; height:20px; border:2px solid rgba(168,85,247,.2); border-top-color:var(--violet); border-radius:50%; animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ── TOAST ── */
+  .toast-wrap{position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:10px; z-index:9999;}
+  .toast{background:var(--panel-2); border:1px solid var(--line); border-left:3px solid var(--go); border-radius:10px; padding:13px 18px; font-size:13px; box-shadow:0 14px 30px -10px rgba(0,0,0,.6); animation:tIn .25s ease both; max-width:320px;}
+  .toast.err{border-left-color:var(--danger);}
+  .toast.info{border-left-color:var(--violet);}
+  @keyframes tIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+
+  /* ── CART DRAWER ── */
+  .cart-backdrop{display:none; position:fixed; inset:0; background:rgba(6,6,10,.6); backdrop-filter:blur(4px); z-index:200;}
+  .cart-backdrop.open{display:block;}
+  .cart-drawer{position:fixed; top:0; right:-420px; width:min(420px,100vw); height:100vh; background:var(--panel-2); border-left:1px solid var(--line); z-index:201; display:flex; flex-direction:column; transition:right .3s cubic-bezier(.4,0,.2,1);}
+  .cart-drawer.open{right:0;}
+  .cart-head{display:flex; align-items:center; justify-content:space-between; padding:22px 24px; border-bottom:1px solid var(--line);}
+  .cart-head h3{font-size:18px;}
+  .cart-close{background:none; border:none; color:var(--mist); font-size:22px; line-height:1; transition:color .2s;}
+  .cart-close:hover{color:var(--ice);}
+  .cart-items{flex:1; overflow-y:auto; padding:16px 24px;}
+  .cart-item{display:flex; gap:12px; align-items:center; padding:12px 0; border-bottom:1px solid rgba(255,255,255,.04);}
+  .cart-item:last-child{border-bottom:none;}
+  .cart-thumb{width:50px; height:50px; border-radius:8px; object-fit:cover; background:var(--panel-3); flex-shrink:0;}
+  .cart-thumb-ph{width:50px; height:50px; border-radius:8px; background:var(--panel-3); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;}
+  .cart-item-info{flex:1;}
+  .cart-item-name{font-size:13.5px; font-weight:600;}
+  .cart-item-price{font-size:12px; color:var(--mist); margin-top:2px;}
+  .cart-item-remove{background:none; border:none; color:var(--mist); font-size:14px; padding:4px; transition:color .2s;}
+  .cart-item-remove:hover{color:var(--danger);}
+  .cart-foot{padding:20px 24px; border-top:1px solid var(--line);}
+  .cart-total{display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;}
+  .cart-total span{font-size:14px; color:var(--mist);}
+  .cart-total strong{font-size:20px; font-family:'Rajdhani',sans-serif;}
+  .cart-empty-msg{text-align:center; color:var(--mist); font-size:13px; padding:40px 0;}
+
+  @media(max-width:600px){
+    .topbar{padding:0 16px;}
+    .hero{padding:36px 16px 30px;}
+    .shop-wrap{padding:0 16px 60px;}
+    .user-greeting{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ AUTH OVERLAY ══════════════ -->
+<div id="authOverlay">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-badge"><span>TT</span></div>
+      <h2>TRENDTEES <span class="glow">STUDIO</span></h2>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Sign in</button>
+      <button class="auth-tab" id="signupTabBtn" onclick="switchAuthTab('signup')">Create account</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="auth-form active" id="loginForm">
+      <div class="field" id="lf_mobile">
+        <label>Mobile number</label>
+        <div class="input-shell">
+          <div class="prefix-wrap">
+            <span class="prefix">+91</span>
+            <input type="tel" id="lf_mobileInput" placeholder="10-digit number" maxlength="10" inputmode="numeric">
+          </div>
+        </div>
+        <div class="field-err">Enter a valid 10-digit mobile number.</div>
+      </div>
+      <div class="field" id="lf_pw">
+        <label>Password</label>
+        <div class="input-shell"><input type="password" id="lf_pwInput" placeholder="••••••••"></div>
+        <div class="field-err">Incorrect mobile or password.</div>
+      </div>
+      <button class="btn-full" onclick="handleLogin()">Sign in</button>
+      <div class="auth-status" id="loginStatus"></div>
+    </div>
+
+    <!-- SIGNUP -->
+    <div class="auth-form" id="signupForm">
+      <div class="field" id="sf_name">
+        <label>Full name</label>
+        <div class="input-shell"><input type="text" id="sf_nameInput" placeholder="e.g. Priya Verma" autocomplete="name"></div>
+        <div class="field-err">Name is required.</div>
+      </div>
+      <div class="field" id="sf_mobile">
+        <label>Mobile number</label>
+        <div class="input-shell">
+          <div class="prefix-wrap">
+            <span class="prefix">+91</span>
+            <input type="tel" id="sf_mobileInput" placeholder="10-digit number" maxlength="10" inputmode="numeric">
+          </div>
+        </div>
+        <div class="field-err">Enter a valid 10-digit mobile number.</div>
+      </div>
+      <div class="field" id="sf_pw">
+        <label>Password</label>
+        <div class="input-shell"><input type="password" id="sf_pwInput" placeholder="Min 6 characters"></div>
+        <div class="field-err">Password must be at least 6 characters.</div>
+      </div>
+      <button class="btn-full" onclick="handleSignup()">Create account</button>
+      <div class="auth-status" id="signupStatus"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ TOPBAR ══════════════ -->
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="brand-badge"><span>TT</span></div>
+    <span class="brand-name">TRENDTEES <span class="glow">STUDIO</span></span>
+  </div>
+  <div class="topbar-right">
+    <span class="user-greeting" id="userGreeting">Welcome</span>
+    <button class="cart-btn" onclick="openCart()">
+      🛒 Cart <span class="cart-count" id="cartCount">0</span>
+    </button>
+  </div>
+</header>
+<div class="drip-line"></div>
+
+<!-- ══════════════ HERO ══════════════ -->
+<section class="hero">
+  <h1>Drop-worthy <span class="glow">fits.</span></h1>
+  <p>Streetwear designed & printed in Dehradun. Each piece is hand-finished in our TRENDTEES Studio.</p>
+  <div class="hero-chips">
+    <span class="chip">🏔️ Made in Dehradun</span>
+    <span class="chip">✦ Limited drops</span>
+    <span class="chip">🚚 Local delivery</span>
+  </div>
+</section>
+
+<!-- ══════════════ SHOP ══════════════ -->
+<main class="shop-wrap">
+  <div class="section-label">All products</div>
+  <div id="productGrid" class="loading-grid">
+    <div class="spinner"></div> Loading drops…
+  </div>
+</main>
+
+<!-- ══════════════ CART DRAWER ══════════════ -->
+<div class="cart-backdrop" id="cartBackdrop" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-head">
+    <h3>Your cart</h3>
+    <button class="cart-close" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-items" id="cartItemsList"></div>
+  <div class="cart-foot">
+    <div class="cart-total">
+      <span>Total</span>
+      <strong id="cartTotal">₹0</strong>
+    </div>
+    <button class="btn-full" onclick="checkoutAll()">Place all orders →</button>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+const API = window.location.origin + "/api";
+
+let currentUser = null;
+let products = [];
+let cart = [];  // [{product, qty}]
+
+/* ════════ INIT ════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  // restore session
+  try {
+    const saved = sessionStorage.getItem('tt_customer');
+    if(saved){ currentUser = JSON.parse(saved); showDashboard(); }
+  } catch(e){}
+
+  // digit-only inputs
+  ['lf_mobileInput','sf_mobileInput'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input', e => e.target.value = e.target.value.replace(/\D/g,'').slice(0,10));
+  });
+});
+
+/* ════════ HELPERS ════════ */
+function toast(msg, type=''){
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = 'toast' + (type ? ' '+type : '');
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.style.transition='opacity .3s,transform .3s'; el.style.opacity='0'; el.style.transform='translateX(20px)'; setTimeout(()=>el.remove(),320); },4500);
+}
+
+function fe(id, has){ document.getElementById(id).classList.toggle('err', has); }
+function setStatus(id, msg, ok=false){
+  const el = document.getElementById(id); el.textContent = msg;
+  el.className = 'auth-status' + (ok ? ' ok' : '');
+}
+function validMobile(m){ return /^[6-9]\d{9}$/.test(m.trim()); }
+
+function renderStars(avg, max=5){
+  let s = '';
+  for(let i=1;i<=max;i++) s += i<=Math.round(avg) ? '★' : '☆';
+  return s;
+}
+
+function stockBadge(stock){
+  if(stock<=0) return `<span class="stock-badge out">Out of stock</span>`;
+  if(stock<=5) return `<span class="stock-badge low">Only ${stock} left</span>`;
+  return `<span class="stock-badge high">${stock} in stock</span>`;
+}
+
+/* ════════ AUTH TAB ════════ */
+window.switchAuthTab = function(tab){
+  ['login','signup'].forEach(t=>{
+    document.getElementById(t+'Form').classList.toggle('active', t===tab);
+    document.querySelectorAll('.auth-tab').forEach((b,i)=>{
+      b.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='signup'));
+    });
+  });
+};
+
+/* ════════ LOGIN ════════ */
+window.handleLogin = async function(){
+  const mobile = document.getElementById('lf_mobileInput').value.trim();
+  const pw = document.getElementById('lf_pwInput').value;
+  fe('lf_mobile',false); fe('lf_pw',false); setStatus('loginStatus','');
+
+  if(!validMobile(mobile)){ fe('lf_mobile',true); return; }
+  if(!pw){ fe('lf_pw',true); return; }
+
+  setStatus('loginStatus','Signing in…');
+  try{
+    const res = await fetch(`${API}/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mobile,password:pw})});
+    const data = await res.json();
+    if(!res.ok){ fe('lf_pw',true); setStatus('loginStatus', data.error||'Login failed.'); return; }
+    currentUser = {name:data.name, mobile:data.mobile};
+    sessionStorage.setItem('tt_customer', JSON.stringify(currentUser));
+    showDashboard();
+  }catch(e){ setStatus('loginStatus','Cannot connect to server. Make sure app.py is running.'); }
+};
+
+/* ════════ SIGNUP ════════ */
+window.handleSignup = async function(){
+  const name = document.getElementById('sf_nameInput').value.trim();
+  const mobile = document.getElementById('sf_mobileInput').value.trim();
+  const pw = document.getElementById('sf_pwInput').value;
+  ['sf_name','sf_mobile','sf_pw'].forEach(id=>fe(id,false));
+  setStatus('signupStatus','');
+
+  if(!name){ fe('sf_name',true); return; }
+  if(!validMobile(mobile)){ fe('sf_mobile',true); return; }
+  if(pw.length<6){ fe('sf_pw',true); return; }
+
+  setStatus('signupStatus','Creating account…');
+  try{
+    const res = await fetch(`${API}/auth/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,mobile,password:pw})});
+    const data = await res.json();
+    if(!res.ok){ setStatus('signupStatus', data.error||'Registration failed.'); return; }
+    currentUser = {name, mobile};
+    sessionStorage.setItem('tt_customer', JSON.stringify(currentUser));
+    setStatus('signupStatus','Account created!', true);
+    setTimeout(()=>showDashboard(), 600);
+  }catch(e){ setStatus('signupStatus','Cannot connect to server. Make sure app.py is running.'); }
+};
+
+function showDashboard(){
+  document.getElementById('authOverlay').style.display = 'none';
+  document.getElementById('userGreeting').innerHTML = `Hey, <b>${currentUser.name.split(' ')[0]}</b> 👋`;
+  loadProducts();
+}
+
+/* ════════ LOAD PRODUCTS ════════ */
+async function loadProducts(){
+  const grid = document.getElementById('productGrid');
+  grid.className = 'loading-grid';
+  grid.innerHTML = '<div class="spinner"></div> Loading drops…';
+  try{
+    const res = await fetch(`${API}/products`);
+    const rawData = await res.json();
+    
+    // Dynamic mapping from Python Backend keys to local variable arrays
+    products = rawData.map(p => ({
+        id: String(p.id),
+        name: p.name,
+        description: p.description,
+        price: p.price,
+        stock: p.available_stock !== undefined ? p.available_stock : p.stock,
+        img_src: p.img_src || p.img_url || "",
+        avg_rating: p.avg_rating || 0.0,
+        review_count: p.review_count || 0
+    }));
+    
+    renderGrid();
+  }catch(e) {
+    grid.className = '';
+    grid.innerHTML = `<div class="empty-state"><div class="big">⚡</div><p>Cannot reach server. Make sure <b>app.py</b> is running on port 5000.</p></div>`;
+  }
+}
+
+function renderGrid(){
+  const grid = document.getElementById('productGrid');
+  if(!products.length){
+    grid.className = '';
+    grid.innerHTML = `<div class="empty-state"><div class="big">👕</div><p>No products yet. The admin is cooking up some drops — check back soon.</p></div>`;
+    return;
+  }
+  grid.className = 'product-grid';
+  grid.innerHTML = products.map(p => buildCard(p)).join('');
+  products.forEach(p => initStars(p.id));
+}
+
+function buildCard(p){
+  const img = p.img_src
+    ? `<img class="card-img" src="${p.img_src}" alt="${esc(p.name)}" loading="lazy">`
+    : `<div class="card-img-placeholder">👕</div>`;
+  return `
+  <div class="product-card" id="card-${p.id}">
+    ${img}
+    <div class="card-body">
+      <div class="card-name">${esc(p.name)}</div>
+      <div class="card-desc">${esc(p.description||'')}</div>
+      <div class="card-meta">
+        <span class="card-price">₹${Math.round(p.price)}</span>
+        ${stockBadge(p.stock)}
+      </div>
+      <div class="card-rating">
+        <span class="stars">${renderStars(p.avg_rating)}</span>
+        <span>${p.avg_rating} (${p.review_count} review${p.review_count===1?'':'s'})</span>
+      </div>
+      <button class="review-toggle" onclick="toggleReviews('${p.id}')">View reviews ▾</button>
+      <div class="reviews-panel" id="rp-${p.id}">
+        <div id="reviews-list-${p.id}"><div style="color:var(--mist);font-size:12px;">Loading reviews…</div></div>
+        <div class="leave-review">
+          <p>Leave a review:</p>
+          <div class="star-selector" id="stars-${p.id}" data-selected="0"></div>
+          <textarea class="review-input" id="ri-${p.id}" placeholder="What did you think?"></textarea>
+          <button class="btn-review-submit" onclick="submitReview('${p.id}')">Post review</button>
+        </div>
+      </div>
+      <button class="btn-buy" id="buy-${p.id}" onclick="buyNow('${p.id}')" ${p.stock<=0?'disabled':''}>
+        ${p.stock<=0 ? 'Out of stock' : 'Buy Now — Dehradun delivery 🏔️'}
+      </button>
+    </div>
+  </div>`;
+}
+
+function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
+/* ════════ STARS SELECTOR ════════ */
+function initStars(productId){
+  const wrap = document.getElementById(`stars-${productId}`);
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  for(let i=1;i<=5;i++){
+    const b = document.createElement('button');
+    b.className = 'star-btn';
+    b.textContent = '★';
+    b.dataset.val = i;
+    b.onclick = () => setStars(productId, i);
+    wrap.appendChild(b);
+  }
+}
+
+function setStars(productId, val){
+  const wrap = document.getElementById(`stars-${productId}`);
+  wrap.dataset.selected = val;
+  wrap.querySelectorAll('.star-btn').forEach(b => b.classList.toggle('lit', parseInt(b.dataset.val)<=val));
+}
+
+/* ════════ REVIEWS PANEL ════════ */
+async function toggleReviews(productId){
+  const panel = document.getElementById(`rp-${productId}`);
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  if(!isOpen) await loadReviewsList(productId);
+}
+
+async function loadReviewsList(productId){
+  const list = document.getElementById(`reviews-list-${productId}`);
+  try{
+    const res = await fetch(`${API}/reviews/${productId}`);
+    const reviews = await res.json();
+    if(!reviews.length){ list.innerHTML = `<div style="color:var(--mist);font-size:12px;">No reviews yet. Be the first!</div>`; return; }
+    list.innerHTML = reviews.map(r=>`
+      <div class="review-item">
+        <div class="review-header">
+          <span class="review-name">${esc(r.customer_name)}</span>
+          <span class="review-stars">${renderStars(r.rating)}</span>
+        </div>
+        ${r.comment ? `<div class="review-text">${esc(r.comment)}</div>` : ''}
+      </div>`).join('');
+  }catch(e){ list.innerHTML = `<div style="color:var(--danger);font-size:12px;">Could not load reviews.</div>`; }
+}
+
+async function submitReview(productId){
+  const starWrap = document.getElementById(`stars-${productId}`);
+  const rating = parseInt(starWrap.dataset.selected||0);
+  const comment = document.getElementById(`ri-${productId}`).value.trim();
+  if(!rating){ toast('Please select a star rating.','err'); return; }
+  if(!currentUser){ toast('Please sign in to leave a review.','err'); return; }
+
+  try{
+    const res = await fetch(`${API}/reviews`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({product_id:productId, rating, comment, customer_name:currentUser.name})});
+    const data = await res.json();
+    if(!res.ok){ toast(data.error||'Review failed.','err'); return; }
+
+    const card = document.getElementById(`card-${productId}`);
+    if(card){
+      card.querySelector('.card-rating').innerHTML =
+        `<span class="stars">${renderStars(data.avg_rating)}</span> <span>${data.avg_rating} (${data.review_count} review${data.review_count===1?'':'s'})</span>`;
+    }
+    await loadReviewsList(productId);
+    document.getElementById(`ri-${productId}`).value='';
+    setStars(productId,0);
+    starWrap.dataset.selected='0';
+    toast('Review posted! Thanks ✨');
+  }catch(e){ toast('Cannot connect to server.','err'); }
+}
+
+/* ════════ BUY NOW ════════ */
+window.buyNow = async function(productId){
+  if(!currentUser){ toast('Please sign in to place an order.','err'); return; }
+  const product = products.find(p=>p.id===productId);
+  if(!product||product.stock<=0){ toast('Out of stock!','err'); return; }
+
+  const btn = document.getElementById(`buy-${productId}`);
+  btn.disabled = true; btn.textContent = 'Placing order…';
+
+  try{
+    const res = await fetch(`${API}/orders`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({product_id:parseInt(productId), quantity:1, customer_name:currentUser.name, customer_mobile:currentUser.mobile})});
+    const data = await res.json();
+    if(!res.ok){ toast(data.error||'Order failed.','err'); btn.disabled=false; btn.textContent='Buy Now — Dehradun delivery 🏔️'; return; }
+
+    product.stock -= 1;
+    const card = document.getElementById(`card-${productId}`);
+    if(card){
+      const badgeWrap = card.querySelector('.card-meta');
+      const oldBadge = badgeWrap.querySelector('.stock-badge');
+      if(oldBadge) oldBadge.outerHTML = stockBadge(product.stock);
+    }
+    if(product.stock <= 0){ btn.textContent='Out of stock'; }
+    else{ btn.disabled=false; btn.textContent='Buy Now — Dehradun delivery 🏔️'; }
+
+    toast('🎉 ' + data.message);
+  }catch(e){ toast('Cannot connect to server.','err'); btn.disabled=false; btn.textContent='Buy Now — Dehradun delivery 🏔️'; }
+};
+
+/* ════════ CART ════════ */
+window.openCart = function(){
+  document.getElementById('cartBackdrop').classList.add('open');
+  document.getElementById('cartDrawer').classList.add('open');
+  renderCartDrawer();
+};
+window.closeCart = function(){
+  document.getElementById('cartBackdrop').classList.remove('open');
+  document.getElementById('cartDrawer').classList.remove('open');
+};
+
+function addToCart(productId){
+  const p = products.find(x=>x.id===productId); if(!p) return;
+  const existing = cart.find(c=>c.product.id===productId);
+  if(existing) existing.qty++;
+  else cart.push({product:p, qty:1});
+  updateCartCount();
+}
+
+function removeFromCart(productId){
+  cart = cart.filter(c=>c.product.id!==productId);
+  updateCartCount();
+  renderCartDrawer();
+}
+
+function updateCartCount(){
+  const total = cart.reduce((s,c)=>s+c.qty,0);
+  document.getElementById('cartCount').textContent = total;
+}
+
+function renderCartDrawer(){
+  const list = document.getElementById('cartItemsList');
+  if(!cart.length){ list.innerHTML='<div class="cart-empty-msg">Your cart is empty.</div>'; document.getElementById('cartTotal').textContent='₹0'; return; }
+  list.innerHTML = cart.map(c=>`
+    <div class="cart-item">
+      ${c.product.img_src ? `<img class="cart-thumb" src="${c.product.img_src}" alt="">` : `<div class="cart-thumb-ph">👕</div>`}
+      <div class="cart-item-info">
+        <div class="cart-item-name">${esc(c.product.name)}</div>
+        <div class="cart-item-price">₹${Math.round(c.product.price)} × ${c.qty}</div>
+      </div>
+      <button class="cart-item-remove" onclick="removeFromCart('${c.product.id}')">✕</button>
+    </div>`).join('');
+  const total = cart.reduce((s,c)=>s+c.product.price*c.qty,0);
+  document.getElementById('cartTotal').textContent = '₹' + Math.round(total);
+}
+
+window.checkoutAll = async function(){
+  if(!cart.length) return;
+  if(!currentUser){ toast('Please sign in first.','err'); return; }
+  for(const item of cart){
+    await window.buyNow(item.product.id);
+  }
+  cart=[]; updateCartCount(); renderCartDrawer(); closeCart();
+};
+</script>
+</body>
+</html>

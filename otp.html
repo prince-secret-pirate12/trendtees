@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Free OTP</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <style>
+        body { font-family: Arial, sans-serif; padding: 30px; text-align: center; background: #f4f4f9; }
+        .box { background: white; padding: 30px; border-radius: 8px; display: inline-block; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); }
+        input { padding: 10px; width: 250px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px 20px; background: #ffca28; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>Trends OTP Verification</h2>
+    
+    <div id="phone-section">
+        <p>Mobile number dalein (Country code ke sath, e.g. +91)</p>
+        <input type="text" id="phone-number" value="+91" placeholder="+919876543210">
+        <br>
+        <button onclick="sendOTP()">Send OTP</button>
+    </div>
+
+    <div id="recaptcha-container"></div>
+
+    <div id="otp-section" style="display: none;">
+        <p>Aapke phone par bheja gaya 6-digit code dalein:</p>
+        <input type="text" id="otp-code" placeholder="123456">
+        <br>
+        <button onclick="verifyOTP()">Verify & Login</button>
+    </div>
+</div>
+
+<script>
+    // Aapki Trends project ki configuration (Sahi tarike se set)
+    const firebaseConfig = {
+        apiKey: "AIzaSyC-zWYBlCKelZdfIAjO18cxHln7iaVmW0U",
+        authDomain: "trends-d5fee.firebaseapp.com",
+        projectId: "trends-d5fee",
+        storageBucket: "trends-d5fee.firebasestorage.app",
+        messagingSenderId: "520329020977",
+        appId: "1:520329020977:web:37121aea13332df1403710"
+    };
+
+    // Firebase chalu karein
+    firebase.initializeApp(firebaseConfig);
+
+    // Invisible Recaptcha setup
+    window.onload = function() {
+        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+            'size': 'invisible'
+        });
+    };
+
+    let confirmationResult;
+
+    // OTP Bhejne ka function
+    function sendOTP() {
+        const num = document.getElementById('phone-number').value;
+        const appVerifier = window.recaptchaVerifier;
+
+        firebase.auth().signInWithPhoneNumber(num, appVerifier)
+            .then((result) => {
+                confirmationResult = result;
+                alert("OTP bhej diya gaya hai!");
+                document.getElementById('phone-section').style.display = 'none';
+                document.getElementById('otp-section').style.display = 'block';
+            }).catch((err) => {
+                alert("Error: " + err.message);
+                console.error(err);
+            });
+    }
+
+    // OTP Check karne ka function
+    function verifyOTP() {
+        const code = document.getElementById('otp-code').value;
+        confirmationResult.confirm(code)
+            .then((result) => {
+                alert("Success! Mobile number verify ho gaya.");
+                window.location.href = "welcome.html"; // Make sure aapke paas welcome.html file ho, nahi toh ye error dega
+            }).catch((err) => {
+                alert("Galat OTP dala hai bhai!");
+            });
+    }
+</script>
+
+</body>
+</html>
